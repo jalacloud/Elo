@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Elo">
+<meta name="theme-color" content="#1d1c1a">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>Elo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday training tool, a little bit broadcast
+   IDEA a radio studio's on-air desk: tally light, clock, levels, script
+   PICTURE the live take dial and voice-level strip, with fillers, WPM and pauses read out large
+   COLOUR white page, charcoal studio band, on-air red accent
+   TYPE Barlow Condensed for figures and titles + Barlow text
+   LAYOUT studio band on top (brief left, dial right; stacked on phone), lesson and scoring below */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121110);--ink:light-dark(#161514,#f2efea);--mut:light-dark(#5f5a53,#a8a299);--line:light-dark(#e3dfd8,#2e2c29);--panel:light-dark(#f5f3ef,#1c1b19);--red:#e5372c;--redt:light-dark(#c42a20,#ff7066);--blue:light-dark(#2457c5,#86a8ff);--studio:#1d1c1a;--sink:#f3f0ea;--smut:#aaa49b;--sline:#3a3834}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3,.num{font-family:"Barlow Condensed",Barlow,sans-serif;letter-spacing:-.01em}
+h1{font-size:clamp(32px,4.4vw,48px);line-height:1.05;margin:.1em 0 .25em;text-wrap:balance}
+h2{font-size:30px;line-height:1.1;margin:0 0 .4em}
+h3{font-size:21px;margin:0 0 .3em}
+p{margin:0 0 .8em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:600}
+button:hover{border-color:var(--mut)}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+.top{background:var(--studio);color:var(--sink);padding:10px max(5vw,16px);border-bottom:1px solid var(--sline)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600}
+.tally{width:12px;height:12px;border-radius:50%;background:#55514b;flex:none}
+.tally.on{background:var(--red);box-shadow:0 0 0 4px #e5372c44}
+.brand b{font-family:"Barlow Condensed",Barlow,system-ui,sans-serif;font-size:24px;letter-spacing:0}
+.brand span{color:var(--smut);font-size:15px}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav a{color:var(--smut);text-decoration:none;padding:10px 12px;border-radius:8px;font-weight:600;white-space:nowrap}
+nav a.cur{color:var(--sink);background:#ffffff14}
+.view[hidden]{display:none}
+.studio{background:var(--studio);color:var(--sink)}
+.sgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:start}
+.phase{color:var(--smut);font-weight:600;margin:0}
+.key{font-size:19px;color:#ffd9d5;margin-bottom:18px}
+.prompt{background:#2a2926;border:1px solid var(--sline);border-radius:14px;padding:18px}
+.plabel{color:var(--smut);font-size:14px;font-weight:600}
+.ptxt{font-family:"Barlow Condensed",Barlow,system-ui,sans-serif;font-size:clamp(23px,2.6vw,30px);line-height:1.15;margin:6px 0 14px}
+.studio button{background:#2f2d2a;border-color:#4a4741;color:var(--sink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid #4a4741;border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;min-width:52px;padding:0 10px}
+.seg button.sel{background:var(--sink);color:var(--studio)}
+.deck{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:14px}
+.dial{position:relative;width:min(100%,300px);aspect-ratio:1}
+.dial svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.dial .face{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.clock{font-family:"Barlow Condensed",Barlow,system-ui,sans-serif;font-size:clamp(56px,8vw,76px);line-height:1;font-variant-numeric:tabular-nums}
+.dial small{color:var(--smut);font-size:14px}
+.meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;max-width:360px;text-align:center}
+.meters div{border-top:1px solid var(--sline);padding-top:6px}
+.meters .num{display:block;font-size:34px;line-height:1.05;font-variant-numeric:tabular-nums}
+.meters span{color:var(--smut);font-size:13px}
+#mF{color:#ff7a70}
+#mW{color:#9db8ff}
+.rec{width:100%;max-width:360px;min-height:56px;font-size:18px;background:var(--red)!important;border-color:var(--red)!important;color:#fff!important;border-radius:999px}
+.rec.live{background:#fff!important;color:var(--red)!important}
+.note{color:var(--smut);font-size:14px;text-align:center;margin:0;max-width:360px}
+.txbox{margin-top:26px;border-top:1px solid var(--sline);padding-top:16px}
+.tx{min-height:72px;font-size:17px;line-height:1.6;color:#e7e3dc;overflow-wrap:anywhere}
+.tx .pt{color:var(--smut)}
+.tx:empty::before{content:"Your words appear here as you speak. Fillers are highlighted.";color:var(--smut)}
+mark{background:#e5372c33;color:#ff8a80;border-radius:4px;padding:0 2px}
+textarea{width:100%;min-height:130px;border-radius:10px;border:1px solid #4a4741;background:#2a2926;padding:12px;font-size:16px;color:var(--sink)}
+.tally-ctl{display:inline-flex;align-items:center;gap:6px;color:var(--smut);font-size:14px}
+.tally-ctl button{min-width:44px;padding:0}
+.two{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:start}
+.card{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--bg)}
+.card+.card{margin-top:16px}
+.lab{font-weight:600;color:var(--mut);font-size:14px;margin-bottom:4px}
+ol.steps{margin:0;padding-left:22px}
+ol.steps li{margin:0 0 6px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer}
+.chk input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--red);flex:none}
+.scorehd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:10px}
+.big{font-family:"Barlow Condensed",Barlow,system-ui,sans-serif;font-size:64px;line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:20px;white-space:nowrap;color:var(--mut)}
+.srow{display:grid;grid-template-columns:9.5em minmax(0,1fr) 3em;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.srow b{font-weight:600}
+.srow em{display:block;font-style:normal;color:var(--mut);font-size:13px}
+.bar{height:10px;border-radius:5px;background:var(--panel);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);border-radius:5px}
+.srow .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--red);height:28px}
+.fb{margin-top:14px;padding:16px;border-radius:12px;background:var(--panel);font-size:15px}
+.fb h3{font-size:19px}
+.fb ul{margin:4px 0 10px;padding-left:20px}
+.tight{border-left:3px solid var(--red);padding-left:12px;margin-top:6px}
+.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.done-btn{width:100%;margin-top:16px}
+.toast{position:fixed;max-width:calc(100% - 32px);white-space:nowrap;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.wk{display:grid;grid-template-columns:minmax(0,15em) minmax(0,1fr);gap:20px;padding:22px 0;border-top:1px solid var(--line)}
+.wk p{color:var(--mut);font-size:15px}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:8px}
+.days button{text-align:left;font-weight:500;display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--bg)}
+.days button .num{font-size:22px;width:1.6em;flex:none;color:var(--mut)}
+.days button.dn{background:var(--panel)}
+.days button.dn .num{color:var(--redt)}
+.days button.cur{border-color:var(--red);border-width:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5em,1fr));gap:12px;margin-bottom:22px}
+.stats div{border-top:3px solid var(--ink);padding-top:6px}
+.stats div:first-child{border-color:var(--red)}
+.stats .num{display:block;font-size:clamp(34px,4vw,44px);line-height:1.05}
+.stats span{color:var(--mut);font-size:14px}
+.fig{position:relative;min-height:300px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font:13px Barlow,sans-serif;fill:var(--mut);paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.grid56{display:grid;grid-template-columns:auto repeat(7,minmax(0,1fr));gap:5px;align-items:center;max-width:340px}
+.grid56 i{aspect-ratio:1;border-radius:5px;background:var(--panel);border:1px solid var(--line)}
+.grid56 i.d{background:var(--red);border-color:var(--red)}
+.grid56 i.c{outline:2px solid var(--ink);outline-offset:1px}
+.grid56 span{font-size:13px;color:var(--mut);padding-right:4px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:600;font-size:14px}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prose{max-width:70ch}
+.prose h3{margin-top:1.2em}
+.muted{color:var(--mut);font-size:14px}
+input[type=text]{width:100%;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:8px 12px;font-size:16px}
+@media(max-width:860px){.sgrid,.two{grid-template-columns:minmax(0,1fr)}.wk{grid-template-columns:minmax(0,1fr);gap:8px}}
+@media(max-width:600px){.dial{width:220px}.big{font-size:52px}.srow{grid-template-columns:7.5em minmax(0,1fr) 2.6em}table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:2px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mut);text-align:left}}
+@media(prefers-reduced-motion:reduce){.tally.on{box-shadow:none}*{transition:none!important}}
+
+.wave{display:block;width:100%;max-width:360px;height:56px}
+.meters .est{color:var(--smut)}
+.play{margin-top:16px}
+.play audio{display:block;width:100%;max-width:560px;margin:6px 0}
+.pline{color:var(--mut);font-size:14px;margin:10px 0 0}
+.sess{display:grid;gap:12px}
+.sess div{border-top:1px solid var(--line);padding-top:8px}
+.sess p{margin:0 0 4px;font-size:14px}
+.sess audio{width:100%}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.opts button.sel{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+select{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);padding:0 10px;font-size:16px}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.lighttx{width:100%;min-height:110px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:10px;font-size:16px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><i class="tally" id="tally"></i><b>Elo</b><span id="dayLabel">Day 1 of 56</span></div>
+  <nav id="nav"><a href="#today">Today</a><a href="#programme">Programme</a><a href="#progress">Progress</a><a href="#method">Method</a></nav>
+</div></header>
+
+<main>
+<section class="view" id="v-today">
+  <div class="studio band"><div class="wrap">
+    <div class="sgrid">
+      <div>
+        <p class="phase" id="phaseLbl"></p>
+        <h1 id="dayTitle"></h1>
+        <p class="key" id="keyIdea"></p>
+        <div class="prompt">
+          <span class="plabel" id="pLabel">Your prompt</span>
+          <p class="ptxt" id="promptTxt"></p>
+          <div class="row">
+            <button id="shuffle" type="button">New prompt</button>
+            <div class="seg" id="durSeg" role="group" aria-label="Take length"></div>
+          </div>
+        </div>
+      </div>
+      <div class="deck">
+        <div class="dial">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle cx="100" cy="100" r="90" fill="none" stroke="#34322e" stroke-width="10"/>
+            <circle id="ring" cx="100" cy="100" r="90" fill="none" stroke="#e5372c" stroke-width="10" stroke-linecap="round" stroke-dasharray="565.5" stroke-dashoffset="565.5"/>
+          </svg>
+          <div class="face"><span class="clock" id="clock">1:00</span><small id="dialSub">Ready</small></div>
+        </div>
+        <canvas class="wave" id="wave" aria-hidden="true"></canvas>
+        <div class="meters">
+          <div><span class="num" id="mF">0</span><span>fillers</span></div>
+          <div><span class="num" id="mW">0</span><span id="wLbl">words/min</span></div>
+          <div><span class="num" id="mP">0</span><span>pauses</span></div>
+        </div>
+        <button class="rec" id="recBtn" type="button">Start take</button>
+        <p class="note" id="micNote"></p>
+      </div>
+    </div>
+    <div class="txbox">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <span class="plabel">Transcript</span>
+        <div class="row">
+          <span class="tally-ctl">Fillers heard <button id="tMinus" type="button" aria-label="Remove one">−</button><b id="tVal">0</b><button id="tPlus" type="button" aria-label="Add one">+</button></span>
+          <button id="editTx" type="button">Type or edit</button>
+        </div>
+      </div>
+      <div class="tx" id="txView"></div>
+      <textarea id="txEdit" hidden placeholder="Type or correct what you said. Metrics update as you go."></textarea>
+      <div class="play" id="play" hidden>
+        <span class="plabel">Playback: tap + for every filler you hear</span>
+        <audio id="aud" controls playsinline preload="metadata"></audio>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="band"><div class="wrap two">
+    <div>
+      <div class="card"><div class="lab">Warm-up · 3 minutes</div><div id="warm"></div></div>
+      <div class="card"><div class="lab">Lesson</div><p id="lesson"></p><div class="lab">Drill</div><ol class="steps" id="drill"></ol></div>
+      <div class="card"><div class="lab">Use it today</div><label class="chk"><input type="checkbox" id="mission"><span id="missionTxt"></span></label></div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="scorehd"><div><div class="lab">Take score</div><h3 id="scoreState">Record a take to score it</h3></div><div class="big num" id="overall">–<small>/100</small></div></div>
+        <div class="srow"><div><b>Pace</b><em>target 140–160 wpm</em></div><div class="bar"><i id="bP" style="width:0"></i></div><span class="v" id="vP">–</span></div>
+        <div class="srow"><div><b>Fillers</b><em id="fpmTxt">per minute</em></div><div class="bar"><i id="bF" style="width:0"></i></div><span class="v" id="vF">–</span></div>
+        <div class="srow"><div><b>Vocal confidence</b><em>your rating, 1–5</em></div><input type="range" id="rC" min="1" max="5" step="1" value="3" aria-label="Vocal confidence rating"><span class="v" id="vC">60</span></div>
+        <div class="srow"><div><b>Structure</b><em>your rating, 1–5</em></div><input type="range" id="rS" min="1" max="5" step="1" value="3" aria-label="Structure rating"><span class="v" id="vS">60</span></div>
+        <p class="pline" id="pauseTxt"></p>
+        <div class="row" style="margin-top:14px">
+          <button id="copyClaude" type="button">Copy for Claude</button>
+          <button id="saveBtn" class="primary" type="button">Save take</button>
+        </div>
+      </div>
+      <div class="card" id="sessCard" hidden><div class="lab">Takes this session</div><div class="sess" id="sess"></div></div>
+      <button class="done-btn" id="doneBtn" type="button">Mark day 1 complete</button>
+    </div>
+  </div></div>
+</section>
+
+<section class="view band" id="v-programme" hidden><div class="wrap">
+  <h1>The 8-week programme</h1>
+  <p class="muted">56 days, 15–20 minutes each. Each week has five new lessons, then a pressure test and a review. Tap any day to open it.</p>
+  <div id="weeks"></div>
+</div></section>
+
+<section class="view band" id="v-progress" hidden><div class="wrap">
+  <h1 id="progTitle">Progress</h1>
+  <div class="stats" id="stats"></div>
+  <div class="two">
+    <div><h3>Fillers per minute, by take</h3><p class="muted" id="chartNote"></p><div class="fig"><svg id="chart" role="img" aria-label="Fillers per minute over time"></svg></div></div>
+    <div><h3>Days completed</h3><div class="grid56" id="grid"></div>
+      <h3 style="margin-top:22px">Your log</h3>
+      <p class="muted">Your progress is saved on this phone only. Copy the log to back it up, or paste it to Claude for a full review.</p>
+      <div class="row"><button id="copyLog" type="button">Copy log</button><button id="resetBtn" type="button">Reset everything</button></div>
+      <details><summary>Import a log</summary>
+        <p class="muted">Paste a log copied from Elo, or from the Claude version's “Copy log” button.</p>
+        <textarea class="lighttx" id="imp" aria-label="Log to import"></textarea>
+        <div class="row" style="margin-top:8px"><button id="impBtn" type="button">Import</button></div>
+      </details>
+    </div>
+  </div>
+  <h3 style="margin-top:28px">Recent takes</h3>
+  <div class="scroll"><table class="stack"><thead><tr><th>Date</th><th>Day</th><th>Prompt</th><th>Fillers/min</th><th>WPM</th><th>Pauses</th><th>Score</th></tr></thead><tbody id="takes"></tbody></table></div>
+</div></section>
+
+<section class="view band" id="v-method" hidden><div class="wrap prose">
+  <h1>How Elo works</h1>
+  <p>Each day follows the same loop: warm up, learn one idea, record a 60–90 second take, listen back, score it, adjust, record again. Then use the idea in a real conversation the same day. Using it in real meetings is what makes it stick.</p>
+  <h3>Recording</h3>
+  <p>Elo uses your phone's microphone in two ways at once. It records audio so you can play the take back, and Apple's speech recognition writes a live transcript, which drives the word count and the filler count.</p>
+  <p>Words per minute updates live while you speak. If the transcript isn't coming through, Elo estimates it from the rhythm of your voice, counting syllables, and marks it “est.”. Each take with a working transcript recalibrates the estimate to how you speak.</p>
+  <div class="lab">Recording mode</div>
+  <div class="opts" id="modeOpts"></div>
+  <p class="muted">If the live transcript and the recording clash on your phone (for example, the transcript stops as soon as you start), choose one of the single modes.</p>
+  <div class="lab">Transcript language</div>
+  <select id="langSel" aria-label="Transcript language"><option value="en-AU">English (Australia)</option><option value="en-GB">English (UK)</option><option value="en-US">English (US)</option></select>
+  <h3>What the scores mean</h3>
+  <p><b>Pace</b>: conversational speech usually runs at about 140–160 words per minute, and the score drops the further you drift outside that band. <b>Fillers</b>: counted from the transcript plus your playback tally. Zero per minute scores 100, and each filler per minute costs 12 points. <b>Pauses</b>: silences of half a second to four seconds between bursts of speech. As fillers fall, this number should rise. <b>Vocal confidence</b> and <b>structure</b>: rate these yourself from the playback, or use “Copy for Claude” and paste the take into a chat for a full critique.</p>
+  <h3>Honest limits</h3>
+  <p>Apple's speech recognition usually strips out “um” and “uh”, so the live filler count will under-report them. The playback tally is the accurate count. Live transcription needs Siri &amp; Dictation switched on in Settings. If it doesn't work from the home-screen icon, open Elo in Safari instead. The words-per-minute estimate is approximate until a few transcribed takes have calibrated it.</p>
+  <h3>Your filler list</h3>
+  <p class="muted">Comma-separated. Remove “like” if you use it correctly a lot and it's inflating your count.</p>
+  <input type="text" id="fillerList" aria-label="Filler words">
+  <div class="row" style="margin-top:8px"><button id="saveFillers" type="button">Save list</button><button id="resetFillers" type="button">Restore default</button></div>
+  <h3>Sources behind the method</h3>
+  <p class="muted">Pyramid Principle and SCR: Barbara Minto. PREP and What / So what / Now what: standard coaching frameworks. Monroe's Motivated Sequence: Alan Monroe. The record-score-repeat loop and the four measures (pace, confidence, pauses and fillers, structure) follow the approach RiseGuide takes in its speech analyser.</p>
+</div></section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const WEEKS=[
+["Awareness","Hear yourself. Map where your fillers come from before trying to fix them."],
+["The pause and the full stop","Replace fillers with deliberate silence and land every sentence."],
+["Structure on demand","Know your next sentence. Frameworks that make off-the-cuff answers clean."],
+["Concision","Say it in half the words. Cut the run-up, the hedges and the jargon."],
+["Voice","Articulation, pace, emphasis, pitch and projection."],
+["Presence","Stance, eyes, gesture and camera energy."],
+["Story and persuasion","Hooks, stories, pitches and staying calm under questioning."],
+["Performance","Build, rehearse and deliver a five-minute capstone talk."]];
+const WARM=[["Four slow breaths: in for 4, out for 6","Lip trills for 20 seconds","“Red leather, yellow leather” slowly, then normal, then fast"],["Lip trills and humming for 30 seconds","“Unique New York” and “Red leather, yellow leather” at three speeds","Read one paragraph aloud, hitting every consonant"]];
+const BASE=["Introduce yourself and what you do, as you would at the start of a workshop.","What's the biggest misconception people have about cyber risk?","Explain how a phishing email turns into a ransomware incident."];
+const P={
+meet:["Kick off a workshop: purpose, outcome and how we'll work, in 60 seconds.","A stakeholder asks: “Why does this take six weeks?” Answer.","Summarise the last meeting you were in, in three points, for someone who missed it.","Push back on a request to add scope mid-engagement without damaging the relationship.","Give a status update on a piece of work that's behind schedule.","Someone challenges your risk rating as too high. Respond.","Close a workshop: what we agreed, who owns what, what happens next.","Disagree constructively with a senior colleague's proposal."],
+talk:["Open a conference talk on why most security programmes defend against the wrong threats.","Close a keynote with a call to action for security leaders.","Make the case that threat intelligence is useless unless it changes a decision.","Give a 60-second talk on what the next five years of cyber attacks will look like.","Argue that small businesses are the real front line of cybersecurity.","Introduce a speaker you admire to a conference audience."],
+video:["Record a LinkedIn video intro: who you are and what you help with.","Podcast host: “What's the biggest misconception about cyber risk?”","Explain what ThreatOS does and who it's for.","Podcast host: “What advice would you give someone moving into security architecture?”","Hot take: is AI making attackers or defenders stronger? Pick a side.","Podcast host: “What's one habit that made you better at your job?”","Share one lesson from a recent piece of work in under a minute."],
+tech:["Explain the difference between a threat, a vulnerability and a risk to a project manager.","Explain zero trust using an everyday analogy.","Explain how ransomware gangs make money.","Explain what threat modelling is, and why it matters, to a developer.","Explain how the internet gets a web page to your phone."],
+story:["Tell the story of a security incident (anonymised) and what it taught you.","Tell a story about a time a plan fell apart and what you did next.","Describe the moment you decided to start your own company.","Tell a story about a mentor and the one piece of advice that stuck."],
+hostile:["A client says: “This assessment just tells us what we already knew.” Respond.","“Why should we trust a consultant's risk rating over our own team's?”","“Your report is too long. Give me the one thing that matters.”","“This sounds like vendor fear-mongering. Convince me it isn't.”","“You missed a critical finding in the last review. What happened?”","“Threat intelligence is just expensive news. Why pay for it?”"],
+exec:["Brief a board on the one cyber risk that should worry them most.","A CFO asks: “How much should we spend on security?” Answer.","Explain to an executive why compliance doesn't equal security."],
+any:["Describe how to make your favourite meal.","Argue for or against working from home.","What's one book everyone should read, and why?","Describe your ideal weekend.","Should kids learn to code at school? Take a position.","Explain a hobby of yours to someone who's never tried it.","What's the most overrated piece of advice you've heard?"]};
+const PREF=["meet","talk","video","any"];
+// [title, key idea, lesson, drill steps, mission, prompt tag]
+const D=[
+["Baseline recording","You can't improve what you haven't measured.","Today is for measuring, not improving. Record three 60-second takes using the baseline prompts and speak as you normally would. Don't try to sound good. These numbers become the line every future take is judged against.","Take 1: introduce yourself as you would to a workshop room|Take 2: answer the misconception question off the cuff|Take 3: explain the phishing-to-ransomware chain|Save each take. Note which one felt hardest","In one meeting today, just notice your fillers. Don't fix them.","base"],
+["Filler audit","Fillers cluster in predictable places.","Record a take while also filming on your phone. Play it back. For every filler, note where it landed: starting a sentence, moving between points, searching for a word, or finishing a thought. Most people find they bunch up in one or two of these spots.","Record one 90-second take|Listen back and add anything the transcript missed with the tally|Write down your top three fillers and where each one lands","Catch yourself mid-filler once today and finish the sentence without it.","meet"],
+["Why fillers happen","A filler is your brain holding the floor while it plans.","Fillers aren't a vocabulary problem. They appear when your mouth is ahead of your thinking and silence feels like losing your turn. The fix is giving yourself permission to be silent while you plan, and slowing down enough that the plan stays ahead of the words.","Speak at about 70% of your normal pace|The moment you hear a filler, stop, pause for two seconds, and restart the sentence|Repeat until you get through 60 seconds clean","Before answering any question today, take one silent breath first.","any"],
+["The pause is power","A two-second pause feels long to you and normal to your listener.","Silence reads as confidence and gives the listener time to absorb what you said. Your internal clock exaggerates pauses: what feels like an awkward gap is usually short on playback. Today you recalibrate that clock.","Answer the prompt, counting “one, two” in your head between every sentence|Play it back and notice how natural the gaps sound|Second take: pause only at the end of each point","Pause deliberately before your key point in one conversation.","talk"],
+["Close your mouth","Fillers start with an open mouth.","An “um” needs an open jaw and your voice switched on. If you close your lips at the end of a thought and breathe in through your nose, a filler can't happen. It's the simplest mechanical fix in the programme.","Answer the prompt, closing your lips at every full stop|Breathe in through your nose before the next sentence|Compare your filler count with Day 1","Use the closed-mouth pause on your next call.","video"],
+["Pressure test: cold starts","Pressure exposes habits. Good. You want to see them.","Three impromptu prompts in a row, no preparation. Use only this week's tools: breathe before you start, pause instead of filling, close your mouth at the full stop.","Hit “New prompt” and start within five seconds|Do three takes back to back|Save each one","Volunteer an answer in a meeting before you feel fully ready.","any"],
+["Week 1 review","Pick one trigger to own next week.","Open Progress and compare this week's takes with your baseline. Don't expect a big drop yet. Paying attention can briefly push the count up, because you now hear fillers you used to miss.","Re-record baseline prompt 2|Compare fillers per minute with Day 1|Choose the one filler trigger you'll target in Week 2","Tell one person you're working on this. It adds accountability.","base"],
+["Land the sentence","Statements end with a falling pitch.","A rising pitch at the end of a statement, or trailing off with “…and so, yeah”, signals you're not finished. That invites both fillers and interruptions. Ending on a downward note tells the room the thought is complete.","Say five factual statements about your work, dropping pitch on the last word|Answer the prompt, landing every sentence|Listen back for any sentence that floats up or trails off","End every sentence in one meeting with a clear full stop.","meet"],
+["One thought, one sentence","Run-on sentences are filler factories.","Long chains joined with “and… so… and then” force you to plan on the fly, and the joins fill up with fillers. Short sentences give you a natural pause point every few seconds.","Answer the prompt using sentences of 15 words or fewer|No sentence may start with “and” or “so”|Second take at your normal length. Notice the difference","Say your next written update out loud in short sentences before sending it.","tech"],
+["Breath as punctuation","Breathe at the pause, not mid-phrase.","Running low on air makes you rush to the end of a phrase, gulp, then fill. Breathing low from the belly at natural pause points gives you steady volume and a built-in reason to stop.","Warm up with four rounds of box breathing: in 4, hold 4, out 4, hold 4|Answer the prompt, breathing only at full stops|Repeat with one breath per point","Box-breathe for one minute before your next presentation or call.","talk"],
+["Replace, don't suppress","Swap the filler for a pause or a bridge.","Trying not to say “um” puts your attention on “um”. Give the space a job instead: a silent pause, or an occasional deliberate bridge such as “Here's the key point” or “Put simply”. Used sparingly, bridges sound intentional. Overused, they become new fillers.","Pick two bridge phrases that sound like you|Answer the prompt, using each once at most|Everything else is a pause","Use one bridge phrase deliberately in a meeting.","meet"],
+["Signpost your transitions","The gap between points is where fillers hide.","Moving between points is the riskiest moment because you're switching ideas. Explicit signposts like “First… Second… Finally…” or “That's the problem. Here's the fix.” give your brain a script for the join.","Give a three-point answer with spoken signposts|Pause after each signpost before the content|Second take: use “That's X. Now Y.” transitions","Structure one update today as “three things”.","meet"],
+["Pressure test: the interrupt","Recover from interruption without “um, so, yeah”.","In workshops you get cut off constantly. The skill is to stop, let the other person finish, pause, and resume with a clean restart line such as “Coming back to the point…”.","Set a phone timer to buzz every 20 seconds, or ask someone to interrupt you|At each buzz, stop mid-sentence and pause for two seconds|Resume with a clean restart, not a filler","When interrupted today, pause before picking the thread back up.","meet"],
+["Week 2 review: midpoint check","Same prompts as Day 1, two weeks on.","Re-record all three baseline prompts. This is your first honest comparison. Look at fillers per minute and where the remaining ones fall. If they've moved from sentence starts to transitions, that's progress.","Record the three baseline prompts|Compare them in Progress|Note your remaining filler hotspot","Listen to two minutes of yourself from a real meeting or video.","base"],
+["Bottom line up front","Answer first. Then reasons.","Most fillers come from not knowing your next sentence. Barbara Minto's Pyramid Principle fixes this: open with your answer in one sentence, then give supporting points. Once the answer is out, everything else just backs it up.","Open every take with a one-sentence answer|Follow with two or three supporting reasons|Stop. No summary, no “so yeah”","Open your next email and your next spoken update with the conclusion.","meet"],
+["PREP","Point, Reason, Example, Point.","PREP is the most reliable shape for impromptu answers. State your point, give the reason, make it real with an example, then restate the point in fresh words. It fits neatly into 60 seconds.","Write P-R-E-P on a sticky note|Answer the prompt following it exactly|Second take on a new prompt, without the note","Answer one question in a meeting using PREP.","video"],
+["What? So what? Now what?","Fact, meaning, action.","The best framework for updates and summaries: what happened, why it matters, and what happens next. It stops you narrating events in order, which is where rambling lives.","Summarise your last meeting in this structure|Then answer the prompt with it|Keep each part to two sentences","Give a status update as What / So what / Now what.","meet"],
+["The rule of three","Three points are memorable. Seven are a list.","Groups of three are easy to remember and easy to deliver. Announce the number up front (“Three reasons…”). It commits you to a plan and tells the listener when you're done.","Answer the prompt with exactly three points, announced up front|Give each point a short label|Close by naming the three labels in one sentence","Use “three things” in one conversation.","talk"],
+["Past, present, future","A ready-made shape for “tell us about…”.","For open questions such as “How did you get into security?”, talk through where it started, where it is now and where it's heading. It's chronological, so you never have to search for what comes next.","Answer: “How did you get into cybersecurity?”|Then answer the prompt using past, present, future|Make the future part the strongest","Use this shape the next time someone asks about your work.","video"],
+["Pressure test: framework roulette","Choose a structure in three seconds.","Real conversations don't tell you which framework to use. Pull a random prompt, choose BLUF, PREP, What-So-What or Three within three seconds, and go.","Five random prompts, 60 seconds each|Name the framework silently before you start|Save each take and score structure honestly","Notice which framework you reach for most often.","any"],
+["Week 3 review","Structure should be showing in your scores.","Compare this week's structure ratings with Week 1. Get Claude's feedback on two takes and read the tighter version each time: that's what concise sounds like for your own content.","Re-record one weak take from this week|Get Claude's feedback on it|Read the tighter version aloud, then record it in your own words","Prepare tomorrow's meeting contribution as a one-line bottom line.","any"],
+["Kill the throat-clearing","Your first five words should carry content.","“So, I think, basically, what I'd say is…” is a run-up before the jump. Cut it. Start with the subject: “The risk is…”, “We should…”, “Three things…”.","Answer five quick prompts|Check the first five words of each in the transcript|Any warm-up words: redo the take","Start every contribution in one meeting with a noun or a verb.","meet"],
+["The 60-30-15 squeeze","If you can say it in 15 seconds, you understand it.","Compression forces you to find what actually matters. Say the same idea in 60 seconds, then 30, then 15, then a five-word headline. The 15-second version is often the one you should have led with.","Take 1: 60 seconds|Take 2: same prompt in 30 seconds|Take 3: 15 seconds, then a five-word headline","Give a 15-second answer to a question you'd normally take two minutes on.","tech"],
+["Concrete beats abstract","Numbers, names and examples, not jargon.","“Uplift our posture to align with best practice” says nothing. “Patch internet-facing systems within 48 hours” says something. Concrete language is shorter and clearer, and it's easier to say without fillers because there's a picture behind it.","Answer the prompt|Find every abstract phrase in the transcript|Re-record, replacing each with a number, a name or an example","Swap one piece of jargon for a concrete example today.","exec"],
+["The hedge audit","Hedges are fillers in disguise.","“I think”, “maybe”, “sort of”, “just”, “a bit” weaken your claims and pad your sentences. Keep a qualifier only where the uncertainty is real, and make it precise: “I'm fairly confident, but we haven't tested it” beats “I sort of think”.","Answer the prompt|Count the hedges in your transcript|Re-record with none, except one deliberate qualifier","Remove “just” from every message you send today.","talk"],
+["Explain it to a peer","If you can't explain it simply, you can't explain it concisely.","The Feynman technique: explain a technical idea to a smart non-specialist with one analogy and no acronyms. Where you stumble is where your own explanation needs tightening.","Explain a security concept to an imaginary project manager|Use one analogy and no acronyms|Second take in 30 seconds","Explain something technical to a non-technical person today.","tech"],
+["Pressure test: the elevator","Thirty seconds, six prompts, no run-up.","Everything from Weeks 1–4 at once: breathe, answer first, short sentences, pause instead of filling, land the last line.","Keep the 60-second timer, but aim to finish by 30|Six prompts back to back|Score each one on concision","Give one real elevator answer when someone asks what you do.","any"],
+["Week 4 review: halfway","Target: fillers per minute halved from your baseline.","Re-record the baseline prompts. If fillers per minute have halved, you're on track. If not, repeat the Day 2 audit: your hotspot has probably moved, and the fix depends on where it is now.","Record the three baseline prompts|Check fillers per minute against the target in Progress|Write one sentence on what changed","Book a real speaking moment for Week 8: a team talk, a meetup or a video.","base"],
+["Articulation warm-up","Crisp consonants make clear speech.","Mumbled endings make you sound unsure and force you to repeat yourself. The pen drill works the tongue and lips: read with a pen held lightly between your front teeth, then without. The difference in clarity is immediate.","Lip trills for 20 seconds, then tongue twisters at three speeds|Read any paragraph aloud for 60 seconds with a pen held lightly between your front teeth|Remove the pen and answer the prompt","Do the warm-up before your first call of the day.","talk"],
+["Pace control","Around 140–160 words a minute, varied on purpose.","Conversational speech typically runs at about 140–160 words per minute. Variation matters more than holding a steady speed: slow down for the point that matters, speed up for background. Rushing is a common cause of fillers under pressure.","Answer the same prompt three times: slow (about 120), normal (about 150), fast (about 180)|Check words per minute each time|Fourth take: slow down on the key point only","Consciously slow down for the one sentence that matters in your next meeting.","video"],
+["Emphasis changes meaning","Stress the word that carries the point.","Say “I didn't say we lost the data” seven times, stressing a different word each time, and you get seven different meanings. Deliberate stress steers attention and keeps you out of a monotone.","Run the seven-meaning sentence|Pick one key word per point before you start|Answer the prompt, hitting each key word","Pick the single word that matters in your next point and land it.","talk"],
+["Pitch and colour","Monotone drains authority.","Vocal variety tells the listener what matters and keeps them listening. Build range by exaggerating in practice. In real conversation it will settle well below the drill.","Deliver the prompt as a news anchor|Then as a storyteller to a friend|Then as a coach before a match, keeping the best of each","Tell one story today with deliberate vocal colour.","story"],
+["Projection and finish","Don't fade on the last word.","Volume often drops at the end of a sentence, and the last word is often the important one. Aim your voice at the back wall, supported by breath rather than the throat.","Stand up and pick a spot on the far wall|Answer the prompt, keeping the last word of each sentence as loud as the first|Listen back for fades","On your next video call, keep full volume to the end of each sentence.","talk"],
+["Pressure test: read, then retell","Absorb fast, explain clean.","Read a short section of an article or report aloud with full articulation, then close it and summarise from memory in 60 seconds. This simulates briefing someone on material you've only just taken in.","Read about 300 words of a threat report aloud|Close it|Summarise in 60 seconds using What / So what / Now what","Brief someone on something you read today.","tech"],
+["Week 5 review: hear and see","Film this one.","Film today's take as well as recording it in the studio. Judge your voice on playback: pace changes, emphasis, landing, volume at the ends of sentences. Rate vocal confidence from what you see, not from how it felt.","Film a 90-second take|Rate vocal confidence from the playback|Note one voice habit to keep and one to drop","Share one take with someone you trust and ask for one note.","video"],
+["Grounded stance","Stillness reads as certainty.","Swaying, shifting weight and fidgeting leak nerves. Stand with feet hip-width apart, weight even, knees soft, hands resting at waist height ready to gesture. Seated: both feet on the floor, forearms on the table.","Film a take standing up|Watch it muted and count every unplanned movement|Re-record and halve them","Take your next meeting standing, or with both feet planted.","talk"],
+["Eyes and the lens","One thought, one person.","In a room, deliver a complete thought to one person before moving to the next. On camera, the lens is that person: look at it, not at your own face on screen.","Stick a small note next to your webcam|Record a video take looking only at the lens|Check playback for your eyes drifting to the screen","Hold eye contact to the end of each sentence in one conversation.","video"],
+["Gestures that mean something","Hands should illustrate, not fidget.","Purposeful gestures, such as counting points on your fingers, showing size or contrast, or an open palm, reinforce the message and help you find words. Keep them at chest height and inside the camera frame.","Plan three gestures for a three-point answer|Record it|Cut any gesture that doesn't add meaning","Count your points on your fingers when you list them today.","talk"],
+["Own the opening silence","Arrive, pause, then speak.","Most speakers start talking while still settling, so the first line comes out as “um, so, hi”. Arrive, look at the audience or the lens, breathe, count to three, then deliver a prepared first line.","Write a strong first line for the prompt|Record a three-second silent open, then the line|Repeat until the silence feels deliberate","Pause for a beat before your first line in your next meeting.","talk"],
+["Camera energy","The camera flattens you.","What feels animated in person reads as flat on video. Lift your energy by about a fifth: a bit more facial expression, vocal range and change of pace. It will feel like too much. Check it on playback.","Record the prompt at your normal energy|Record again with more energy|Watch both and keep whichever is stronger","Start your next video call with extra energy for the first minute.","video"],
+["Pressure test: one-take video","No edits. No retakes.","Record a 60–90 second LinkedIn-style video in one take. Imperfection is fine, but fillers and restarts aren't. Use a hook, one point, one example and a closing line.","Write only a hook and a closing line|Record once|Score it honestly and keep it, even if you won't post it","Optional: post it.","video"],
+["Week 6 review","Voice plus presence.","Watch this week's videos back to back. Your filler count should now hold up under pressure. By this stage, what's left is often physical (eyes, hands, posture) rather than verbal.","Re-record your weakest take of the week|Get Claude's feedback|Choose your capstone topic for Week 8","Confirm the date for your capstone speaking moment.","video"],
+["Situation, complication, resolution","Every good story has a problem in the middle.","SCR, also from Minto, is the shortest reliable story structure: set the scene, introduce the tension, show how it was resolved. Stories resist fillers naturally because each beat tells you what comes next.","Tell a 60-second story from an engagement, anonymised|Mark S, C and R on the transcript|Cut the situation to two sentences and retell it","Use a short story to make a point in a meeting.","story"],
+["The hook","Never open with “Hi, I'm… and today I'll talk about…”.","You have about ten seconds before attention drifts. Open with a question, a surprising fact, a moment (“At 2am on a Sunday…”) or a bold claim. Introduce yourself after you've earned attention.","Write five different openings for the same talk|Record all five|Keep the one that makes you lean in","Open your next presentation or video with a hook.","talk"],
+["Problem, cost, answer","Persuasion follows the listener's logic, not yours.","To persuade, name the listener's problem, make its cost tangible, then give your answer and the next step. It's a condensed version of Monroe's Motivated Sequence. Lead with features and you lose them.","Pitch ThreatOS in 60 seconds: problem, cost, answer, next step|Second take in 30 seconds|Third take as a podcast answer","Frame one request today as problem, cost, answer.","video"],
+["Q&A: pause, answer, stop","The urge to keep going is where fillers creep back.","Questions are impromptu speaking under scrutiny. Pause before answering (it signals thought, not doubt), give the answer in one sentence, support it briefly, then stop.","Answer five challenging questions|Pause for two seconds before each one|Finish within 30 seconds","After answering a question today, stop and let the silence sit.","hostile"],
+["When you don't know","“I don't know” is a complete, credible sentence.","Waffling to cover a gap is obvious and costly. Say what you don't know, what you do know, and how you'll find out. Your credibility goes up, not down.","Answer three questions you genuinely can't fully answer|Use: don't know, do know, will find out|Keep each one under 30 seconds","Use the formula once, honestly.","hostile"],
+["Pressure test: hostile Q&A","Calm under challenge.","Five sceptical or hostile questions back to back. Don't get defensive, and don't over-explain. Pause, acknowledge the concern in a few words, answer, stop.","Five hostile prompts, 45 seconds maximum each|Score structure and confidence|Get Claude's feedback on the worst one","Invite a colleague to challenge your work.","hostile"],
+["Week 7 review","Draft your capstone.","Outline your five-minute capstone: a hook, three points (each with a story or example), and a close with a clear call to action. Write bullet points, not a script. You'll speak it, not read it.","Write the outline: hook, three points, close|Record a rough two-minute version|Note where you stalled","Tell one person what your talk is about in one sentence.","talk"],
+["Build the capstone","Outline, not script.","Turn the outline into speaking notes: one line per point, with the hook and closing line written out in full and memorised. Everything in between should come from understanding, not recall.","Memorise your first and last lines|Record the hook plus point 1|Score it and adjust","Rehearse your first line on a walk.","talk"],
+["Rehearse the middle","Transitions are where talks fall apart.","Rehearse points 2 and 3 with their transitions. Use the signposts and pauses from Week 2 to hold the joins together.","Record points 2 and 3 with transitions|Check where fillers land at each join|Re-record the weakest transition","Use a signposted transition in a real meeting.","talk"],
+["Rehearse the close","End on purpose, not on “so, yeah, that's it”.","A strong close sums up in one sentence, gives one clear call to action, then stops. Finish with a pause and eye contact, not a nervous “thanks”.","Record your close three different ways|Keep the shortest one that still lands|Practise a three-second hold after the last word","End one meeting contribution with a clear ask.","talk"],
+["Full run-through","Five minutes, start to finish, no stopping.","Run the whole talk without stopping, on video. Fumbles will happen; recovering cleanly is the skill. Mark where fillers clustered. That's your final rehearsal focus.","Set the timer to 5:00 and run the whole talk|Add fillers from playback with the tally|Rehearse only the weak sections","Run the talk once for another person.","talk"],
+["Capstone: live","Real audience, real stakes.","Deliver your talk for real: a team meeting, a meetup, a client workshop or a published video. Afterwards, write down three things that went well and one to change. Leave the recording until tomorrow.","Deliver the talk|Write three wins and one change|Log a take with honest self-scores","Today, the talk is the mission.","talk"],
+["Final baseline","Same three prompts as Day 1.","Record the three baseline prompts exactly as you did on Day 1. Compare fillers per minute, words per minute and structure. This is your real result.","Record the three baseline prompts|Open Progress and compare with Day 1|Note what's changed most","Notice how an ordinary meeting feels now.","base"],
+["Maintenance plan","Skills fade without practice.","Keep the gains with a five-minute daily habit: one random prompt, one take, one score. Once a week, do a pressure test. Once a month, re-record the baseline prompts.","Set a daily five-minute reminder|Choose your weekly pressure test|Log today's take as your first maintenance rep","Book your next real speaking opportunity.","any"]];
+const DEF_F=["um","uh","er","erm","ah","like","you know","sort of","kind of","basically","actually","literally","i mean","you see","okay so","yeah no"];
+
+const KEY="elo.v1";
+const fresh=()=>({day:0,done:{},mission:{},warm:{},takes:[],fillers:DEF_F.slice(),dur:60,mode:"both",lang:"en-AU",cal:0,updatedAt:0});
+let S=fresh();
+try{const v=JSON.parse(localStorage.getItem(KEY)||"null");if(v&&typeof v==="object")S=Object.assign(fresh(),v)}catch(e){}
+const save=()=>{S.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Couldn't save. Storage is full or blocked")}};
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2000)};
+const fmt=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+const fRe=()=>new RegExp("\\b("+S.fillers.slice().sort((a,b)=>b.length-a.length).map(f=>escRe(f).replace(/\s+/g,"\\s+")).join("|")+")\\b","gi");
+const words=t=>t.trim().split(/\s+/).filter(w=>/[a-z0-9]/i.test(w)).length;
+const join=(...a)=>a.filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const AC=window.AudioContext||window.webkitAudioContext;
+const hasMic=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&AC);
+const DEF_CAL=0.69;// words per syllable in conversational English, roughly; replaced by your own calibration
+const T={timed:false,on:false,t0:0,el:0,text:"",sess:"",partial:"",manual:0,iv:null,done:false,prompt:"",bIdx:0,textOK:false,recDead:false,audio:null,list:[]};
+let R=null,A=null,E=null;
+
+/* ---------- Today ---------- */
+const pick=tag=>{if(tag==="base")return BASE[T.bIdx%3];
+  const pool=Math.random()<.6&&P[tag]?P[tag]:P[PREF[Math.floor(Math.random()*PREF.length)]];
+  let p;do{p=pool[Math.floor(Math.random()*pool.length)]}while(p===T.prompt&&pool.length>1);return p};
+const setPrompt=()=>{const tag=D[S.day][5];T.prompt=pick(tag);$("#promptTxt").textContent=T.prompt;
+  $("#pLabel").textContent=tag==="base"?"Baseline prompt "+(T.bIdx%3+1)+" of 3":"Your prompt";
+  $("#shuffle").textContent=tag==="base"?"Next baseline prompt":"New prompt"};
+const renderDur=()=>{$("#durSeg").innerHTML=[60,90,120,300].map(d=>`<button type="button" data-d="${d}" class="${S.dur===d?"sel":""}" aria-pressed="${S.dur===d}">${d<300?d+"s":"5m"}</button>`).join("");if(!T.on)$("#clock").textContent=fmt(S.dur)};
+const renderToday=()=>{const i=S.day,d=D[i],w=Math.floor(i/7);
+  $("#dayLabel").textContent=`Day ${i+1} of 56`;
+  $("#phaseLbl").textContent=`Week ${w+1} · ${WEEKS[w][0]} · Day ${i+1}`;
+  $("#dayTitle").textContent=d[0];$("#keyIdea").textContent=d[1];$("#lesson").textContent=d[2];
+  $("#drill").innerHTML=d[3].split("|").map(s=>`<li>${esc(s)}</li>`).join("");
+  $("#missionTxt").textContent=d[4];$("#mission").checked=!!S.mission[i];
+  const wl=WARM[w<4?0:1],ws=S.warm[i]||[];
+  $("#warm").innerHTML=wl.map((x,k)=>`<label class="chk"><input type="checkbox" data-k="${k}" ${ws[k]?"checked":""}><span>${esc(x)}</span></label>`).join("");
+  const dn=!!S.done[i];$("#doneBtn").textContent=dn?`Day ${i+1} complete · go to next day`:`Mark day ${i+1} complete`;$("#doneBtn").className="done-btn"+(dn?"":" primary");
+  renderDur()};
+const status=()=>{const t=S.mode!=="audio"&&SR,a=S.mode!=="text"&&hasMic;
+  $("#micNote").textContent=!t&&!a?"No microphone access in this browser. Use the timer and type what you said."
+    :t&&a?"Records audio for playback, with a live transcript."
+    :a?"Records audio for playback. Words per minute is estimated from your voice."
+    :"Live transcript only. No audio playback in this mode."};
+
+/* ---------- Audio analysis: level, syllable-rate estimate, pauses ---------- */
+const newE=()=>({lt:0,env:0,floor:0,pk:.05,inPk:false,cur:0,valley:1,last:0,syl:0,speak:0,silent:0,had:false,pauses:0,longest:0,hist:[],n:0});
+const frame=()=>{if(!A||!A.an)return;const b=A.buf;A.an.getByteTimeDomainData(b);let s=0;for(let i=0;i<b.length;i++){const v=(b[i]-128)/128;s+=v*v}
+  const rms=Math.sqrt(s/b.length),t=performance.now(),dt=E.lt?Math.min(100,t-E.lt):20;E.lt=t;E.n++;E.env=E.env*.5+rms*.5;const env=E.env;
+  if(E.n<8){E.floor=E.n===1?env:Math.min(E.floor,env)}else if(env<E.floor)E.floor=E.floor*.9+env*.1;else E.floor+=(env-E.floor)*.0015;
+  const thr=Math.max(E.floor*2.2,E.floor+.3*(E.pk-E.floor),.004);
+  if(!E.inPk){if(env>thr&&env>E.valley*1.3){E.inPk=true;E.cur=env}else E.valley=Math.min(E.valley,env)}
+  else{if(env>E.cur)E.cur=env;else if(env<E.cur*.7){if(t-E.last>110){E.syl++;E.last=t;E.pk=E.pk*.95+E.cur*.05}E.inPk=false;E.valley=env}}
+  const on=env>thr;
+  if(on){if(E.had&&E.silent>=500&&E.silent<=4000){E.pauses++;E.longest=Math.max(E.longest,E.silent)}E.silent=0;E.had=true;E.speak+=dt}else E.silent+=dt;
+  E.hist.push(on?Math.max(env,thr*1.05)/(E.pk*1.6):-Math.min(1,env/(thr||1)));if(E.hist.length>240)E.hist.shift()};
+const wave=$("#wave");
+const drawWave=()=>{const dpr=window.devicePixelRatio||1,W=wave.clientWidth,H=wave.clientHeight;if(!W)return;
+  if(wave.width!==Math.round(W*dpr)){wave.width=Math.round(W*dpr);wave.height=Math.round(H*dpr)}
+  const c=wave.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const h=E?E.hist:[],n=Math.floor(W/4);c.fillStyle="#3a3834";c.fillRect(0,H/2-.5,W,1);
+  for(let i=0;i<n;i++){const v=h[h.length-n+i];if(v===undefined)continue;const on=v>0,a=Math.min(1,Math.abs(v)),bh=on?Math.max(4,a*(H-4)):Math.max(2,a*8);
+    c.fillStyle=on?"#e5372c":"#5a564f";c.fillRect(i*4,(H-bh)/2,3,bh)}
+  if(T.on)A&&(A.raf=requestAnimationFrame(drawWave))};
+const ro2=new ResizeObserver(()=>{if(!T.on)drawWave()});ro2.observe(wave);
+
+/* ---------- Recording ---------- */
+const startRec=()=>{try{R=new SR()}catch(e){R=null;return}
+  R.lang=S.lang||"en-AU";R.continuous=true;R.interimResults=true;
+  R.onresult=e=>{let f="",p="";for(let i=0;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)f+=r[0].transcript+" ";else p+=r[0].transcript+" "}
+    T.sess=f.trim();T.partial=p.trim();if(T.sess||T.partial)T.textOK=true;renderTx()};
+  R.onerror=e=>{if(["not-allowed","service-not-allowed","audio-capture"].includes(e.error)){T.recDead=true;
+    $("#micNote").textContent=e.error==="audio-capture"?"Live transcript couldn't share the microphone. Words per minute is estimated. Try “Transcript only” in Method if you want a transcript.":"Speech recognition is off. Check Siri & Dictation in Settings. Words per minute is estimated."}};
+  R.onend=()=>{T.text=join(T.text,T.sess);T.sess="";if(T.on&&!T.recDead){try{R.start()}catch(e){}}else if(T.recDone)T.recDone()};
+  try{R.start()}catch(e){T.recDead=true}};
+const startAudio=async a=>{const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  if(!T.on||A!==a){stream.getTracks().forEach(t=>t.stop());return}
+  a.stream=stream;try{await a.ctx.resume()}catch(e){}
+  const src=a.ctx.createMediaStreamSource(stream);a.an=a.ctx.createAnalyser();a.an.fftSize=1024;src.connect(a.an);a.buf=new Uint8Array(a.an.fftSize);
+  if(window.MediaRecorder){const mt=["audio/mp4","audio/webm;codecs=opus","audio/webm"].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t));
+    try{a.mr=new MediaRecorder(stream,mt?{mimeType:mt}:undefined);a.chunks=[];a.mr.ondataavailable=e=>{if(e.data&&e.data.size)a.chunks.push(e.data)};a.mr.start(1000)}catch(e){a.mr=null}}
+  a.iv=setInterval(frame,20);a.raf=requestAnimationFrame(drawWave)};
+const startTake=()=>{if(T.on){stopTake();return}
+  resetTake();T.on=true;T.timed=true;T.t0=Date.now();E=newE();
+  const wantText=S.mode!=="audio"&&!!SR,wantAudio=S.mode!=="text"&&hasMic;
+  if(wantAudio){A={ctx:new AC()};A.ctx.resume&&A.ctx.resume().catch(()=>{});const a=A;
+    startAudio(a).catch(err=>{if(A===a)A=null;$("#micNote").textContent=err&&err.name==="NotAllowedError"?"Microphone blocked. Allow it for this site in Settings → Safari → Microphone.":"Couldn't open the microphone on this device."})}
+  if(wantText)startRec();
+  T.iv=setInterval(tick,200);
+  $("#recBtn").textContent="Stop take";$("#recBtn").classList.add("live");$("#tally").classList.add("on");$("#dialSub").textContent="Recording"};
+const stopTake=async()=>{if(!T.on)return;T.on=false;clearInterval(T.iv);T.el=Math.min(S.dur,(Date.now()-T.t0)/1000);
+  $("#recBtn").textContent="Start take";$("#recBtn").classList.remove("live");$("#tally").classList.remove("on");$("#dialSub").textContent="Finishing…";$("#recBtn").disabled=true;
+  const a=A;A=null;
+  if(a){clearInterval(a.iv);cancelAnimationFrame(a.raf);
+    if(a.mr&&a.mr.state!=="inactive"){await new Promise(r=>{a.mr.onstop=r;try{a.mr.stop()}catch(e){r()}setTimeout(r,1500)});
+      if(a.chunks&&a.chunks.length){const blob=new Blob(a.chunks,{type:a.mr.mimeType||"audio/mp4"});T.audio=URL.createObjectURL(blob)}}
+    if(a.stream)a.stream.getTracks().forEach(t=>t.stop());a.ctx&&a.ctx.close&&a.ctx.close().catch(()=>{})}
+  if(R){const r=R;await new Promise(res=>{T.recDone=res;try{r.stop()}catch(e){res()}setTimeout(res,1500)});T.recDone=null;
+    T.text=join(T.text,T.sess,T.partial);T.sess="";T.partial="";R=null}
+  const n=words(T.text);if(T.textOK&&n>=40&&E&&E.syl>=40){const r=Math.min(1,Math.max(.4,n/E.syl));S.cal=S.cal?S.cal*.7+r*.3:r;save()}
+  $("#recBtn").disabled=false;$("#dialSub").textContent="Take finished";
+  if(T.audio){$("#aud").src=T.audio;$("#play").hidden=false}
+  T.done=true;renderTx();renderScore();drawWave()};
+
+/* ---------- Metrics and scoring ---------- */
+const full=()=>join(T.text,T.sess,T.partial);
+const metrics=()=>{const txt=full(),n=words(txt),auto=(txt.match(fRe())||[]).length,f=auto+T.manual;
+  const secs=T.el||0,mins=Math.max(secs,5)/60;const estN=E?Math.round(E.syl*(S.cal||DEF_CAL)):0;
+  const est=T.timed&&!T.textOK&&estN>0,wN=est?estN:n;
+  return {n,f,secs:Math.round(secs),est,wpm:T.timed&&wN&&secs>=3?Math.round(wN/mins):0,fpm:secs>=5?+(f/mins).toFixed(1):0,
+    pauses:E?E.pauses:0,longest:E?E.longest/1000:0,speak:E&&secs?Math.min(100,Math.round(E.speak/10/secs)):0,audio:!!(E&&E.n)}};
+const renderTx=()=>{$("#txView").innerHTML=esc(join(T.text,T.sess)).replace(fRe(),"<mark>$1</mark>")+(T.partial?` <span class="pt">${esc(T.partial)}</span>`:"");updMeters()};
+const updMeters=()=>{const m=metrics();$("#mF").textContent=m.f;$("#mW").textContent=(m.est&&m.wpm?"~":"")+m.wpm;$("#mW").classList.toggle("est",m.est);
+  $("#wLbl").textContent=m.est?"words/min (est.)":"words/min";$("#mP").textContent=m.pauses;$("#tVal").textContent=T.manual;if(T.done)renderScore()};
+const sc=m=>{const pace=m.wpm?Math.max(0,Math.round(100-1.5*(m.wpm<140?140-m.wpm:m.wpm>160?m.wpm-160:0))):null;
+  const fill=m.secs>=5?Math.max(0,Math.round(100-12*m.fpm)):null;const conf=+$("#rC").value*20,struct=+$("#rS").value*20;
+  const arr=[pace,fill,conf,struct].filter(x=>x!==null);return {pace,fill,conf,struct,overall:Math.round(arr.reduce((a,b)=>a+b,0)/arr.length)}};
+const renderScore=()=>{const m=metrics(),s=sc(m);
+  $("#bP").style.width=(s.pace??0)+"%";$("#vP").textContent=s.pace??"–";$("#bF").style.width=(s.fill??0)+"%";$("#vF").textContent=s.fill??"–";
+  $("#fpmTxt").textContent=m.secs>=5?`${m.fpm} per minute`:"per minute";$("#vC").textContent=s.conf;$("#vS").textContent=s.struct;
+  $("#overall").innerHTML=`${s.overall}<small>/100</small>`;
+  const fl=`${m.f} filler${m.f===1?"":"s"}`;
+  $("#scoreState").textContent=!T.timed?`${fl} · typed, assumes a ${fmt(m.secs)} take`:m.wpm?`${m.est?"~":""}${m.wpm} wpm · ${fl} in ${fmt(m.secs)}`:`${fl} in ${fmt(m.secs)}`;
+  $("#pauseTxt").textContent=m.audio?`${m.pauses} pause${m.pauses===1?"":"s"}${m.longest?`, longest ${m.longest.toFixed(1)}s`:""} · voice active ${m.speak}% of the take`:""};
+const tick=()=>{T.el=(Date.now()-T.t0)/1000;const left=S.dur-T.el;$("#clock").textContent=fmt(Math.ceil(left));
+  $("#ring").setAttribute("stroke-dashoffset",(565.5*(1-Math.min(1,T.el/S.dur))).toFixed(1));updMeters();if(left<=0)stopTake()};
+const resetTake=()=>{Object.assign(T,{timed:false,text:"",sess:"",partial:"",manual:0,el:0,done:false,textOK:false,recDead:false,audio:null});E=null;
+  $("#play").hidden=true;$("#aud").removeAttribute("src");$("#txEdit").value="";$("#txEdit").hidden=true;$("#txView").hidden=false;$("#editTx").textContent="Type or edit";
+  $("#overall").innerHTML="–<small>/100</small>";$("#scoreState").textContent="Record a take to score it";$("#pauseTxt").textContent="";
+  ["#bP","#bF"].forEach(x=>$(x).style.width=0);$("#vP").textContent="–";$("#vF").textContent="–";$("#ring").setAttribute("stroke-dashoffset","565.5");renderTx();drawWave()};
+const saveTake=()=>{const m=metrics();if(!T.done&&!m.n&&!m.f){toast("Record or type a take first");return}
+  T.done=true;const s=sc(m),at=Date.now();
+  S.takes.push({at,day:S.day,prompt:T.prompt,base:D[S.day][5]==="base",secs:m.secs,words:m.n,fillers:m.f,fpm:m.fpm,wpm:m.wpm,est:m.est,pauses:m.pauses,pace:s.pace,fill:s.fill,conf:s.conf,struct:s.struct,overall:s.overall,tx:T.text.slice(0,500)});
+  save();if(T.audio)T.list.unshift({at,prompt:T.prompt,url:T.audio,overall:s.overall});renderSess();
+  toast("Take saved");if(D[S.day][5]==="base"){T.bIdx++;setPrompt()}};
+const renderSess=()=>{$("#sessCard").hidden=!T.list.length;$("#sess").innerHTML=T.list.map(t=>`<div><p>${new Date(t.at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · score ${t.overall} · ${esc(t.prompt.length>60?t.prompt.slice(0,58)+"…":t.prompt)}</p><audio controls playsinline preload="none" src="${t.url}"></audio></div>`).join("")};
+const copyClaude=()=>{const m=metrics(),d=D[S.day];if(!full()){toast("Record or type a take first");return}
+  const q=`Coach me on this speaking practice take. Be direct and critical, no flattery.
+Programme: Elo, Day ${S.day+1}, “${d[0]}”: ${d[1]}
+Prompt: ${T.prompt}
+Measured: ${fmt(m.secs)} · ${m.est?"~":""}${m.wpm} words/min · ${m.f} fillers (Apple's transcription may hide some “um”s) · ${m.pauses} pauses
+My ratings: vocal confidence ${$("#rC").value}/5, structure ${$("#rS").value}/5
+Transcript: """${full()}"""
+Give me: 1) a structure score out of 100 with a one-line reason; 2) the wordiest, hedging or throat-clearing phrase; 3) three specific fixes for my next take; 4) a tighter version at no more than 60% of the words, in natural spoken British English.`;
+  navigator.clipboard.writeText(q).then(()=>toast("Copied. Paste it into Claude"),()=>toast("Copy blocked by the browser"))};
+
+/* ---------- Programme ---------- */
+const renderProg=()=>{$("#weeks").innerHTML=WEEKS.map((w,k)=>`<div class="wk"><div><h3>Week ${k+1} · ${esc(w[0])}</h3><p>${esc(w[1])}</p></div><div class="days">${D.slice(k*7,k*7+7).map((d,j)=>{const i=k*7+j;return `<button type="button" data-day="${i}" class="${S.done[i]?"dn ":""}${S.day===i?"cur":""}"><span class="num">${i+1}</span><span>${esc(d[0])}${S.done[i]?" ✓":""}</span></button>`}).join("")}</div></div>`).join("")};
+
+/* ---------- Progress ---------- */
+const dkey=t=>new Date(t).toDateString();
+const streak=()=>{const set=new Set(S.takes.map(t=>dkey(t.at)));Object.values(S.done).forEach(v=>typeof v==="number"&&set.add(dkey(v)));
+  let n=0,d=new Date();if(!set.has(d.toDateString()))d.setDate(d.getDate()-1);while(set.has(d.toDateString())){n++;d.setDate(d.getDate()-1)}return n};
+const baseline=()=>{const b=S.takes.filter(t=>t.day===0&&t.secs>=5);const src=b.length?b:S.takes.slice(0,3);return src.length?src.reduce((a,t)=>a+t.fpm,0)/src.length:null};
+const renderStats=()=>{const tk=S.takes,last=tk.slice(-5),b=baseline(),nd=Object.keys(S.done).length;
+  const lf=last.length?last.reduce((a,t)=>a+t.fpm,0)/last.length:null,lw=last.filter(t=>t.wpm).length?Math.round(last.filter(t=>t.wpm).reduce((a,t)=>a+t.wpm,0)/last.filter(t=>t.wpm).length):null;
+  const ch=b&&lf!==null?Math.round((lf-b)/b*100):null;
+  $("#progTitle").textContent=tk.length<2?"Progress":ch!==null&&ch<0?`Fillers down ${-ch}% since your baseline`:ch!==null?`Fillers ${ch>0?"up "+ch+"%":"level"} against your baseline`:"Progress";
+  $("#stats").innerHTML=[[nd+"/56","days complete"],[streak(),"day streak"],[tk.length,"takes logged"],[lf===null?"–":lf.toFixed(1),"fillers/min, last 5"+(b?` (baseline ${b.toFixed(1)})`:"")],[lw??"–","avg wpm, last 5"]].map(x=>`<div><span class="num">${x[0]}</span><span>${x[1]}</span></div>`).join("");
+  $("#grid").innerHTML=WEEKS.map((w,k)=>`<span>Wk ${k+1}</span>`+[0,1,2,3,4,5,6].map(j=>{const i=k*7+j;return `<i class="${S.done[i]?"d ":""}${S.day===i?"c":""}" title="Day ${i+1}: ${esc(D[i][0])}"></i>`}).join("")).join("");
+  $("#takes").innerHTML=tk.length?tk.slice(-12).reverse().map(t=>`<tr><td data-l="Date">${new Date(t.at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</td><td data-l="Day">${t.day+1}</td><td data-l="Prompt">${esc(t.prompt.length>70?t.prompt.slice(0,68)+"…":t.prompt)}</td><td class="n" data-l="Fillers/min">${t.fpm}</td><td class="n" data-l="WPM">${t.wpm?(t.est?"~":"")+t.wpm:"–"}</td><td class="n" data-l="Pauses">${t.pauses??"–"}</td><td class="n" data-l="Score">${t.overall}</td></tr>`).join(""):`<tr><td colspan="7" class="muted">No takes yet. Day 1's baseline recordings will appear here.</td></tr>`};
+const EX=[6.2,5.8,6.6,5.1,4.9,4.4,4.6,3.8,3.5,3.9,3.1,2.8,2.6,2.9,2.2];
+const chart=$("#chart");
+const drawChart=()=>{const Wd=chart.clientWidth,H=chart.clientHeight;if(!Wd||!H)return;const real=S.takes.length>=2;
+  const ys=real?S.takes.map(t=>t.fpm):EX;const b=real?baseline():EX[0];
+  $("#chartNote").textContent=real?"Dashed line: your Day 1 baseline. Red line: the target, half of baseline.":"Example data, shown until you've logged two takes.";
+  const L=36,R=16,Tp=14,B=28,max=Math.max(2,Math.ceil(Math.max(...ys,b||0)+.5)),x=i=>L+(ys.length<2?0:i*(Wd-L-R)/(ys.length-1)),y=v=>Tp+(1-v/max)*(H-Tp-B);
+  const step=max>8?2:1,ticks=[];for(let v=0;v<=max;v+=step)ticks.push(v);
+  let s=ticks.map(v=>`<line x1="${L}" x2="${Wd-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${v}</text>`).join("");
+  if(b){s+=`<line x1="${L}" x2="${Wd-R}" y1="${y(b)}" y2="${y(b)}" stroke="var(--mut)" stroke-dasharray="5 5"/><line x1="${L}" x2="${Wd-R}" y1="${y(b/2)}" y2="${y(b/2)}" stroke="var(--red)" stroke-width="1.5"/>`;
+    s+=`<text x="${Wd-R}" y="${y(b/2)-6}" text-anchor="end" style="fill:var(--redt)">target ${(b/2).toFixed(1)}</text>`}
+  const pts=ys.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  s+=`<polyline points="${pts}" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round" opacity="${real?1:.35}"/>`;
+  s+=ys.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="${Wd<520?3:4}" fill="var(--ink)" opacity="${real?1:.35}"/>`).join("");
+  s+=`<text x="${L}" y="${H-8}">${real?"first take":"take 1"}</text><text x="${Wd-R}" y="${H-8}" text-anchor="end">${real?"latest":"take "+ys.length}</text>`;
+  chart.innerHTML=s};
+const ro=new ResizeObserver(drawChart);ro.observe(chart);
+
+/* ---------- Routing ---------- */
+const VIEWS=["today","programme","progress","method"];
+const route=()=>{const h=location.hash.slice(1);const v=VIEWS.includes(h)?h:"today";
+  VIEWS.forEach(x=>$("#v-"+x).hidden=x!==v);document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("cur",a.getAttribute("href")==="#"+v));
+  if(v==="programme")renderProg();if(v==="progress"){renderStats();requestAnimationFrame(drawChart)}if(v==="method"){$("#fillerList").value=S.fillers.join(", ");renderModes()}};
+window.addEventListener("hashchange",()=>{route();window.scrollTo(0,0)});
+const goDay=i=>{if(T.on)return;S.day=Math.max(0,Math.min(55,i));T.bIdx=0;save();renderToday();setPrompt();resetTake();location.hash="today"};
+
+
+
+/* ---------- Events ---------- */
+$("#recBtn").addEventListener("click",startTake);
+$("#shuffle").addEventListener("click",()=>{if(T.on)return;if(D[S.day][5]==="base")T.bIdx++;setPrompt()});
+$("#durSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||T.on)return;S.dur=+b.dataset.d;save();renderDur()});
+$("#tPlus").addEventListener("click",()=>{T.manual++;updMeters()});
+$("#tMinus").addEventListener("click",()=>{T.manual=Math.max(0,T.manual-1);updMeters()});
+$("#editTx").addEventListener("click",()=>{const ed=$("#txEdit");if(ed.hidden){if(T.on)return;ed.value=full();T.sess="";T.partial="";T.text=ed.value;ed.hidden=false;$("#txView").hidden=true;$("#editTx").textContent="Done";ed.focus()}
+  else{ed.hidden=true;$("#txView").hidden=false;$("#editTx").textContent="Type or edit";renderTx()}});
+$("#txEdit").addEventListener("input",e=>{T.text=e.target.value;if(!T.el)T.el=S.dur;if(T.text)T.textOK=true;T.done=true;updMeters()});
+["#rC","#rS"].forEach(id=>$(id).addEventListener("input",renderScore));
+$("#copyClaude").addEventListener("click",copyClaude);
+$("#saveBtn").addEventListener("click",saveTake);
+$("#doneBtn").addEventListener("click",()=>{const i=S.day;if(S.done[i]){if(i<55)goDay(i+1);return}S.done[i]=Date.now();save();toast(`Day ${i+1} complete`);renderToday()});
+$("#mission").addEventListener("change",e=>{S.mission[S.day]=e.target.checked;save()});
+$("#warm").addEventListener("change",e=>{const k=+e.target.dataset.k;const a=S.warm[S.day]||[];a[k]=e.target.checked;S.warm[S.day]=a;save()});
+$("#weeks").addEventListener("click",e=>{const b=e.target.closest("button[data-day]");if(b)goDay(+b.dataset.day)});
+$("#copyLog").addEventListener("click",()=>{const out=JSON.stringify({programme:"Elo 8-week",day:S.day+1,completed:Object.keys(S.done).map(k=>+k+1),baselineFpm:baseline(),takes:S.takes},null,1);
+  navigator.clipboard.writeText(out).then(()=>toast("Log copied"),()=>toast("Copy blocked by the browser"))});
+$("#impBtn").addEventListener("click",()=>{let j;try{j=JSON.parse($("#imp").value)}catch(e){toast("That isn't a valid log");return}
+  if(!j||!Array.isArray(j.takes)){toast("No takes found in that log");return}
+  const have=new Set(S.takes.map(t=>t.at));let n=0;j.takes.forEach(t=>{if(t&&typeof t.at==="number"&&!have.has(t.at)){S.takes.push(t);n++}});S.takes.sort((a,b)=>a.at-b.at);
+  (j.completed||[]).forEach(k=>{if(k>=1&&k<=56&&!S.done[k-1])S.done[k-1]=Date.now()});if(j.day>=1&&j.day<=56)S.day=Math.max(S.day,j.day-1);
+  save();$("#imp").value="";renderToday();setPrompt();renderStats();drawChart();toast(`Imported ${n} take${n===1?"":"s"}`)});
+let resetArm=0;$("#resetBtn").addEventListener("click",()=>{if(Date.now()-resetArm>4000){resetArm=Date.now();$("#resetBtn").textContent="Tap again to erase all";setTimeout(()=>$("#resetBtn").textContent="Reset everything",4000);return}
+  const keep={mode:S.mode,lang:S.lang};S=Object.assign(fresh(),keep);save();resetArm=0;$("#resetBtn").textContent="Reset everything";renderToday();setPrompt();resetTake();renderStats();drawChart();toast("Programme reset")});
+$("#saveFillers").addEventListener("click",()=>{const l=$("#fillerList").value.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean);if(!l.length){toast("List can't be empty");return}S.fillers=l;save();renderTx();toast("Filler list saved")});
+$("#resetFillers").addEventListener("click",()=>{S.fillers=DEF_F.slice();$("#fillerList").value=S.fillers.join(", ");save();renderTx();toast("Default restored")});
+const MODES=[["both","Audio + transcript"],["audio","Audio only"],["text","Transcript only"]];
+const renderModes=()=>{$("#modeOpts").innerHTML=MODES.map(m=>`<button type="button" data-m="${m[0]}" class="${S.mode===m[0]?"sel":""}" aria-pressed="${S.mode===m[0]}">${m[1]}</button>`).join("");$("#langSel").value=S.lang};
+$("#modeOpts").addEventListener("click",e=>{const b=e.target.closest("button[data-m]");if(!b||T.on)return;S.mode=b.dataset.m;save();renderModes();status()});
+$("#langSel").addEventListener("change",e=>{S.lang=e.target.value;save()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&T.on)stopTake()});
+
+/* ---------- Boot ---------- */
+renderToday();setPrompt();renderTx();status();route();
+}
+</script>
+</body>
+</html>
